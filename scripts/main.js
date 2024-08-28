@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { World } from "./world";
+import { createUI } from "./ui";
+import { Player } from "./player";
 
 let WINDOW_WIDTH = window.innerWidth;
 let WINDOW_HEIGHT = window.innerHeight;
@@ -13,6 +15,8 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setClearColor(0x80a0e0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(75, WINDOW_WIDTH / WINDOW_HEIGHT);
@@ -27,28 +31,42 @@ const world = new World();
 world.generate();
 scene.add(world);
 
-const setupLights = () => {
-  const light1 = new THREE.DirectionalLight();
-  light1.position.set(1, 1, 1);
-  scene.add(light1);
+const player = new Player(scene);
 
-  const light2 = new THREE.DirectionalLight();
-  light2.position.set(-1, 1, -0.5);
-  scene.add(light2);
+const setupLights = () => {
+  const sun = new THREE.DirectionalLight();
+  sun.position.set(50, 50, 50);
+  sun.castShadow = true;
+  sun.shadow.camera.left = -50;
+  sun.shadow.camera.right = 50;
+  sun.shadow.camera.bottom = -50;
+  sun.shadow.camera.top = 50;
+  sun.shadow.camera.near = 0.1;
+  sun.shadow.camera.far = 100;
+  sun.shadow.bias = -0.0005;
+  sun.shadow.mapSize = new THREE.Vector2(512, 512);
+  scene.add(sun);
+
+  // const shadowHelper = new THREE.CameraHelper(sun.shadow.camera);
+  // scene.add(shadowHelper);
 
   const ambient = new THREE.AmbientLight();
   ambient.intensity = 0.1;
   scene.add(ambient);
 };
 
+let previousTime = performance.now();
 const animate = () => {
+  let currentTime = performance.now();
+  let dt = currentTime - previousTime;
+
   requestAnimationFrame(animate);
+  player.applyInputs(dt);
   stats.update();
 
-  // cube.rotation.x += 0.01;
-  // cube.rotation.y += 0.01;
+  previousTime = currentTime;
 
-  renderer.render(scene, camera);
+  renderer.render(scene, player.camera);
 };
 
 window.addEventListener("resize", () => {
@@ -61,4 +79,5 @@ window.addEventListener("resize", () => {
 });
 
 setupLights();
+createUI(world);
 animate();
