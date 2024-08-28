@@ -4,6 +4,7 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import { World } from "./world";
 import { createUI } from "./ui";
 import { Player } from "./player";
+import { Physics } from "./physics";
 
 let WINDOW_WIDTH = window.innerWidth;
 let WINDOW_HEIGHT = window.innerHeight;
@@ -36,6 +37,8 @@ scene.add(world);
 
 const player = new Player(scene);
 
+const physics = new Physics(scene);
+
 const setupLights = () => {
   const sun = new THREE.DirectionalLight();
   sun.position.set(50, 50, 50);
@@ -64,15 +67,14 @@ const animate = () => {
   let dt = (currentTime - previousTime) / 1000;
 
   requestAnimationFrame(animate);
-  player.applyInputs(dt);
-  stats.update();
-
-  previousTime = currentTime;
-
+  physics.update(dt, player, world);
   renderer.render(
     scene,
     player.controls.isLocked ? player.camera : orbitCamera,
   );
+  stats.update();
+
+  previousTime = currentTime;
 };
 
 window.addEventListener("resize", () => {
