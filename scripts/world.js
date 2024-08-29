@@ -161,6 +161,32 @@ export class World extends THREE.Group {
     }
   }
 
+  removeBlock(x, y, z) {
+    const coords = this.worldToChunkCoords(x, y, z);
+    const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+    if (chunk) {
+      chunk.removeBlock(coords.block.x, coords.block.y, coords.block.z);
+    }
+
+    // Reveal adjacent blocks if they are hidden
+    this.revealBlock(x - 1, y, z);
+    this.revealBlock(x + 1, y, z);
+    this.revealBlock(x, y - 1, z);
+    this.revealBlock(x, y + 1, z);
+    this.revealBlock(x, y, z - 1);
+    this.revealBlock(x, y, z + 1);
+  }
+
+  revealBlock(x, y, z) {
+    const coords = this.worldToChunkCoords(x, y, z);
+    const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+    if (chunk) {
+      chunk.addBlockInstance(coords.block.x, coords.block.y, coords.block.z);
+    }
+  }
+
   /**
    * Returns the coordinates of the block at world (x, y ,z)
    *  - `chunk` is the coordinates of the chunk containing the block

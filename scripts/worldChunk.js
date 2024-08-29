@@ -115,7 +115,7 @@ export class WorldChunk extends THREE.Group {
           blockType.material,
           maxCount,
         );
-        mesh.name = blockType.name;
+        mesh.name = blockType.id;
         mesh.count = 0;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -127,9 +127,11 @@ export class WorldChunk extends THREE.Group {
       for (let y = 0; y < this.size.height; y++) {
         for (let z = 0; z < this.size.width; z++) {
           const blockId = this.getBlock(x, y, z).id;
+
           if (blockId === blocks.empty.id) {
             continue;
           }
+
           const mesh = meshes[blockId];
           const instanceId = mesh.count;
 
@@ -154,6 +156,68 @@ export class WorldChunk extends THREE.Group {
     }
   }
 
+  removeBlock(x, y, z) {
+    const block = this.getBlock(x, y, z);
+    console.log("Block", block);
+    if (block && block.id !== blocks.empty.id) {
+      this.deleteBlockInstance(x, y, z);
+      this.setBlockId(x, y, z, blocks.empty.id);
+    }
+  }
+
+  deleteBlockInstance(x, y, z) {
+    const block = this.getBlock(x, y, z);
+    if (!block.instanceId || block.id === blocks.empty.id) return;
+
+    console.log("Deleting block instance", block, x, y, z);
+
+    const mesh = this.children.find(
+      (instanceMesh) => instanceMesh.name === block.id,
+    );
+    const instanceId = block.instanceId;
+
+    // Swapping the transformation matrix of the block in the last position
+    // with the block to be deleted
+    const lastMatrix = new THREE.Matrix4();
+    mesh.getMatrixAt(mesh.count - 1, lastMatrix);
+
+    // Update the instanceId of the block in the last position to its new instanceId
+    const v = new THREE.Vector3();
+    v.setFromMatrixPosition(lastMatrix);
+    this.setBlockInstanceId(v.x, v.y, v.z, instanceId);
+
+    // Swapping the transformation matrices
+    mesh.setMatrixAt(instanceId, lastMatrix);
+
+    mesh.count--;
+
+    // Notify the instanced mesh we updated the instance matrix
+    // Also re-compute the bounding sphere so raycasting works
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+
+    this.setBlockInstanceId(x, y, z, null);
+    this.setBlockId(x, y, z, blocks.empty.id);
+  }
+
+  addBlockInstance(x, y, z) {
+    const block = this.getBlock(x, y, z);
+
+    // Verify the block exists and is not an empty block type
+    if (block && block.id !== blocks.empty.id && !block.instanceId) {
+      const mesh = this.children.find(
+        (instanceMesh) => instanceMesh.name === block.id,
+      );
+      const instanceId = mesh.count++;
+      this.setBlockInstanceId(x, y, z, instanceId);
+
+      const matrix = new THREE.Matrix4();
+      matrix.setPosition(x, y, z);
+      mesh.setMatrixAt(instanceId, matrix);
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
+
   setBlockId(x, y, z, id) {
     if (this.inBounds(x, y, z)) {
       this.data[x][y][z].id = id;
@@ -162,7 +226,7 @@ export class WorldChunk extends THREE.Group {
 
   setBlockInstanceId(x, y, z, instanceId) {
     if (this.inBounds(x, y, z)) {
-      this.data[x][y][z].id = instanceId;
+      this.data[x][y][z].instanceId = instanceId;
     }
   }
 

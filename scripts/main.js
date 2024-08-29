@@ -63,6 +63,14 @@ const setupLights = () => {
   scene.add(ambient);
 };
 
+const onMouseDown = (event) => {
+  if (player.controls.isLocked && player.selectedCoords) {
+    world.removeBlock(...player.selectedCoords);
+  }
+};
+
+document.addEventListener("mousedown", onMouseDown);
+
 // Render loop
 let previousTime = performance.now();
 const animate = () => {
@@ -73,6 +81,7 @@ const animate = () => {
 
   if (player.controls.isLocked) {
     physics.update(dt, player, world);
+    player.update(world);
     world.update(player);
 
     sun.position.copy(player.position);

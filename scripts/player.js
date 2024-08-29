@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls";
+import { CENTER_SCREEN } from "./constants";
 
 export class Player {
   radius = 0.5;
@@ -20,6 +21,9 @@ export class Player {
   controls = new PointerLockControls(this.camera, document.body);
   cameraHelper = new THREE.CameraHelper(this.camera);
 
+  raycaster = new THREE.Raycaster(undefined, undefined, 0, 3);
+  selectedCoords = null;
+
   constructor(scene) {
     this.camera.position.set(32, 16, 32);
     scene.add(this.camera);
@@ -33,7 +37,48 @@ export class Player {
       new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
       new THREE.MeshBasicMaterial({ wireframe: true }),
     );
-    scene.add(this.boundsHelper);
+    // scene.add(this.boundsHelper);
+
+    const selectionMaterial = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0.3,
+      color: 0xffffaa,
+    });
+    const selectionGeometry = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+    this.selectionHelper = new THREE.Mesh(selectionGeometry, selectionMaterial);
+    scene.add(this.selectionHelper);
+  }
+
+  update(world) {
+    this.updateRaycaster(world);
+  }
+
+  updateRaycaster(world) {
+    this.raycaster.setFromCamera(CENTER_SCREEN, this.camera);
+    const intersections = this.raycaster.intersectObject(world, true);
+
+    if (intersections.length > 0) {
+      const intersection = intersections[0];
+
+      // Get the position of the chunk that the block is contained in
+      const chunk = intersection.object.parent;
+
+      // Get transformation matrix of the intersected block
+      const blockMatrix = new THREE.Matrix4();
+      intersection.object.getMatrixAt(intersection.instanceId, blockMatrix);
+
+      // Extract the position from the block matrix
+      this.selectedCoords = chunk.position.clone();
+      this.selectedCoords.applyMatrix4(blockMatrix);
+
+      this.selectionHelper.position.copy(this.selectedCoords);
+      this.selectionHelper.visible = true;
+
+      // console.log(this.selectedCoords);
+    } else {
+      this.selectedCoords = null;
+      this.selectionHelper.visible = false;
+    }
   }
 
   get worldVelocity() {
