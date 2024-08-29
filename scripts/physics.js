@@ -84,7 +84,7 @@ export class Physics {
       }
     }
 
-    console.log(`Broad phase: ${candidates.length} candidates`);
+    // console.log(`Broad phase: ${candidates.length} candidates`);
 
     return candidates;
   }
@@ -137,7 +137,7 @@ export class Physics {
       }
     }
 
-    console.log(`Narrow phase: ${collisions.length} collisions`);
+    // console.log(`Narrow phase: ${collisions.length} collisions`);
 
     return collisions;
   }
@@ -150,7 +150,7 @@ export class Physics {
   resolveCollisions(collisions, player) {
     // Resolve the collisions in order of the smallest overlap to the largest
     collisions.sort((a, b) => {
-      return a.overlap < b.overlap;
+      return a.overlap - b.overlap;
     });
 
     for (const collision of collisions) {
