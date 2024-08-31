@@ -86,11 +86,17 @@ export class WorldChunk extends THREE.Group {
         let height = Math.floor(this.size.height * scaledNoise);
         height = Math.max(0, Math.min(height, this.size.height - 1));
 
-        for (let y = 0; y <= this.size.height; y++) {
-          if (y < height && this.getBlock(x, y, z).id === blocks.empty.id) {
-            this.setBlockId(x, y, z, blocks.dirt.id);
-          } else if (y === height) {
+        // Starting at the terrain height, fill in all the blocks below that height
+        for (let y = 0; y < this.size.height; y++) {
+          if (y === height) {
             this.setBlockId(x, y, z, blocks.grass.id);
+            // Fill in blocks with dirt if they aren't already filled with something else
+          } else if (
+            y < height &&
+            this.getBlock(x, y, z).id === blocks.empty.id
+          ) {
+            this.setBlockId(x, y, z, blocks.dirt.id);
+            // Clear everything above
           } else if (y > height) {
             this.setBlockId(x, y, z, blocks.empty.id);
           }
@@ -100,9 +106,9 @@ export class WorldChunk extends THREE.Group {
   }
 
   generateMeshes() {
-    this.clear();
+    this.disposeInstances();
 
-    const maxCount = this.size.width * this.size.height * this.size.width;
+    const maxCount = this.size.width * this.size.width * this.size.height;
 
     // Lookup table where the key is the block id
     const meshes = {};
@@ -148,17 +154,15 @@ export class WorldChunk extends THREE.Group {
     this.add(...Object.values(meshes));
   }
 
-  getBlock(x, y, z) {
-    if (this.inBounds(x, y, z)) {
-      return this.data[x][y][z];
-    } else {
-      return null;
+  addBlock(x, y, z, blockId) {
+    if (this.getBlock(x, y, z).id === blocks.empty.id) {
+      this.setBlockId(x, y, z, blockId);
+      this.addBlockInstance(x, y, z);
     }
   }
 
   removeBlock(x, y, z) {
     const block = this.getBlock(x, y, z);
-    console.log("Block", block);
     if (block && block.id !== blocks.empty.id) {
       this.deleteBlockInstance(x, y, z);
       this.setBlockId(x, y, z, blocks.empty.id);
@@ -168,9 +172,6 @@ export class WorldChunk extends THREE.Group {
   deleteBlockInstance(x, y, z) {
     const block = this.getBlock(x, y, z);
     if (!block.instanceId || block.id === blocks.empty.id) return;
-
-    console.log("Deleting block instance", block, x, y, z);
-
     const mesh = this.children.find(
       (instanceMesh) => instanceMesh.name === block.id,
     );
@@ -183,7 +184,7 @@ export class WorldChunk extends THREE.Group {
 
     // Update the instanceId of the block in the last position to its new instanceId
     const v = new THREE.Vector3();
-    v.setFromMatrixPosition(lastMatrix);
+    v.applyMatrix4(lastMatrix);
     this.setBlockInstanceId(v.x, v.y, v.z, instanceId);
 
     // Swapping the transformation matrices
@@ -196,8 +197,8 @@ export class WorldChunk extends THREE.Group {
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingSphere();
 
-    this.setBlockInstanceId(x, y, z, null);
-    this.setBlockId(x, y, z, blocks.empty.id);
+    this.setBlockInstanceId(x, y, z, undefined);
+    // console.log(`Block removed successfully at x: ${x} y: ${y} z: ${z} `);
   }
 
   addBlockInstance(x, y, z) {
@@ -214,7 +215,16 @@ export class WorldChunk extends THREE.Group {
       const matrix = new THREE.Matrix4();
       matrix.setPosition(x, y, z);
       mesh.setMatrixAt(instanceId, matrix);
+
       mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  getBlock(x, y, z) {
+    if (this.inBounds(x, y, z)) {
+      return this.data[x][y][z];
+    } else {
+      return null;
     }
   }
 
@@ -244,10 +254,10 @@ export class WorldChunk extends THREE.Group {
   isBlockObscured(x, y, z) {
     const up = this.getBlock(x, y + 1, z)?.id ?? blocks.empty.id;
     const down = this.getBlock(x, y - 1, z)?.id ?? blocks.empty.id;
-    const left = this.getBlock(x + 1, y, z)?.id ?? blocks.empty.id;
-    const right = this.getBlock(x - 1, y, z)?.id ?? blocks.empty.id;
-    const forward = this.getBlock(x, y + 1, z + 1)?.id ?? blocks.empty.id;
-    const back = this.getBlock(x, y + 1, z - 1)?.id ?? blocks.empty.id;
+    const right = this.getBlock(x + 1, y, z)?.id ?? blocks.empty.id;
+    const left = this.getBlock(x - 1, y, z)?.id ?? blocks.empty.id;
+    const forward = this.getBlock(x, y, z + 1)?.id ?? blocks.empty.id;
+    const back = this.getBlock(x, y, z - 1)?.id ?? blocks.empty.id;
 
     return (
       up !== blocks.empty.id &&

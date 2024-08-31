@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls";
 import { CENTER_SCREEN } from "./constants";
+import { blocks } from "./blocks";
 
 export class Player {
   radius = 0.5;
@@ -23,6 +24,7 @@ export class Player {
 
   raycaster = new THREE.Raycaster(undefined, undefined, 0, 3);
   selectedCoords = null;
+  activeBlockId = blocks.grass.id;
 
   constructor(scene) {
     this.camera.position.set(32, 16, 32);
@@ -70,6 +72,10 @@ export class Player {
       // Extract the position from the block matrix
       this.selectedCoords = chunk.position.clone();
       this.selectedCoords.applyMatrix4(blockMatrix);
+
+      if (this.activeBlockId !== blocks.empty.id) {
+        this.selectedCoords.add(intersection.normal);
+      }
 
       this.selectionHelper.position.copy(this.selectedCoords);
       this.selectionHelper.visible = true;
@@ -126,6 +132,15 @@ export class Player {
     }
 
     switch (event.code) {
+      case "Digit0":
+      case "Digit1":
+      case "Digit2":
+      case "Digit3":
+      case "Digit4":
+      case "Digit5":
+        this.activeBlockId = Number(event.key);
+        console.log("Active block id:", event.key);
+        break;
       case "KeyW":
         this.input.z = this.maxSpeed;
         break;

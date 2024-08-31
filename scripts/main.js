@@ -5,6 +5,7 @@ import { World } from "./world";
 import { createUI } from "./ui";
 import { Player } from "./player";
 import { Physics } from "./physics";
+import { blocks } from "./blocks";
 
 let WINDOW_WIDTH = window.innerWidth;
 let WINDOW_HEIGHT = window.innerHeight;
@@ -65,7 +66,11 @@ const setupLights = () => {
 
 const onMouseDown = (event) => {
   if (player.controls.isLocked && player.selectedCoords) {
-    world.removeBlock(...player.selectedCoords);
+    if (player.activeBlockId === blocks.empty.id) {
+      world.removeBlock(...player.selectedCoords);
+    } else {
+      world.addBlock(...player.selectedCoords, player.activeBlockId);
+    }
   }
 };
 
