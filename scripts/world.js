@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { WorldChunk } from "./worldChunk";
+import { DataStore } from "./dataStore";
 
 export class World extends THREE.Group {
   chunkSize = { width: 32, height: 32 };
@@ -23,17 +24,24 @@ export class World extends THREE.Group {
     },
   };
 
+  dataStore = new DataStore();
+
   constructor(seed = 0) {
     super();
     this.seed = seed;
   }
 
   generate() {
+    this.dataStore.clear();
     this.disposeChunks();
 
     for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
       for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
-        const chunk = new WorldChunk(this.chunkSize, this.params);
+        const chunk = new WorldChunk(
+          this.chunkSize,
+          this.params,
+          this.dataStore,
+        );
         chunk.position.set(
           x * this.chunkSize.width,
           0,
@@ -136,7 +144,7 @@ export class World extends THREE.Group {
   }
 
   generateChunk(x, z) {
-    const chunk = new WorldChunk(this.chunkSize, this.params);
+    const chunk = new WorldChunk(this.chunkSize, this.params, this.dataStore);
     chunk.position.set(x * this.chunkSize.width, 0, z * this.chunkSize.width);
     chunk.userData = { x, z };
 
