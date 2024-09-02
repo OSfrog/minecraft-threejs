@@ -116,5 +116,5 @@ window.addEventListener("resize", () => {
 });
 
 setupLights();
-createUI(scene, world, player);
+createUI(scene, world, player, physics);
 animate();

@@ -138,6 +138,10 @@ export class Player {
       case "Digit3":
       case "Digit4":
       case "Digit5":
+      case "Digit6":
+      case "Digit7":
+      case "Digit8":
+      case "Digit9":
         this.activeBlockId = Number(event.key);
         console.log("Active block id:", event.key);
         break;
