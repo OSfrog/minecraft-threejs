@@ -3,7 +3,7 @@ import { WorldChunk } from "./worldChunk";
 import { DataStore } from "./dataStore";
 
 export class World extends THREE.Group {
-  chunkSize = { width: 32, height: 32 };
+  chunkSize = { width: 24, height: 32 };
 
   /**
    * The number of chunks to render around the player
@@ -19,8 +19,9 @@ export class World extends THREE.Group {
     seed: 0,
     terrain: {
       scale: 30,
-      magnitude: 0.5,
-      offset: 0.2,
+      magnitude: 10,
+      offset: 4,
+      waterOffset: 4,
     },
     trees: {
       trunk: {
