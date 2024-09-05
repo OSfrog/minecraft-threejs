@@ -65,6 +65,6 @@ export function createUI(scene, world, player, physics) {
   cloudsFolder.add(world.params.clouds, "density", 0, 1).name("Cloud Density");
 
   gui.onChange(() => {
-    world.generate();
+    world.generate(true);
   });
 }

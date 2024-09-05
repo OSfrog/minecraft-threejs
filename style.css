@@ -12,6 +12,14 @@ body {
   margin: 8px;
 }
 
+#status {
+  position: fixed;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  font-size: 2em;
+  color: white;
+}
+
 #toolbar-container {
   position: fixed;
   bottom: 0.5rem;

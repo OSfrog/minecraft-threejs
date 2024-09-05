@@ -46,10 +46,41 @@ export class World extends THREE.Group {
   constructor(seed = 0) {
     super();
     this.seed = seed;
+
+    document.addEventListener("keydown", (event) => {
+      switch (event.code) {
+        case "F1":
+          this.save();
+          break;
+        case "F2":
+          this.load();
+          break;
+      }
+    });
   }
 
-  generate() {
-    this.dataStore.clear();
+  save() {
+    localStorage.setItem("minecraft_params", JSON.stringify(this.params));
+    localStorage.setItem("minecraft_data", JSON.stringify(this.dataStore.data));
+    document.getElementById("status").innerHTML = "Game saved!";
+
+    setTimeout(() => (document.getElementById("status").innerHTML = ""), 3000);
+  }
+
+  load() {
+    this.params = JSON.parse(localStorage.getItem("minecraft_params"));
+    this.dataStore.data = JSON.parse(localStorage.getItem("minecraft_data"));
+
+    document.getElementById("status").innerHTML = "Game loaded!";
+
+    setTimeout(() => (document.getElementById("status").innerHTML = ""), 3000);
+    this.generate();
+  }
+
+  generate(clearCache = false) {
+    if (clearCache) {
+      this.dataStore.clear();
+    }
     this.disposeChunks();
 
     for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
