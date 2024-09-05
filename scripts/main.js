@@ -6,6 +6,7 @@ import { createUI } from "./ui";
 import { Player } from "./player";
 import { Physics } from "./physics";
 import { blocks } from "./blocks";
+import { ModelLoader } from "./modelLoader";
 
 let WINDOW_WIDTH = window.innerWidth;
 let WINDOW_HEIGHT = window.innerHeight;
@@ -38,9 +39,15 @@ const world = new World();
 world.generate();
 scene.add(world);
 
-const player = new Player(scene);
+const modelLoader = new ModelLoader();
 
+const player = new Player(scene);
 const physics = new Physics(scene);
+
+modelLoader.loadModels((models) => {
+  // Add the pickaxe to the player
+  player.tool.setMesh(models.pickaxe);
+});
 
 const sun = new THREE.DirectionalLight();
 const setupLights = () => {
@@ -69,6 +76,7 @@ const onMouseDown = (event) => {
   if (player.controls.isLocked && player.selectedCoords) {
     if (player.activeBlockId === blocks.empty.id) {
       world.removeBlock(...player.selectedCoords);
+      player.tool.startAnimation();
     } else {
       world.addBlock(...player.selectedCoords, player.activeBlockId);
     }

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls";
 import { CENTER_SCREEN } from "./constants";
 import { blocks } from "./blocks";
+import { Tool } from "./tool";
 
 export class Player {
   radius = 0.5;
@@ -24,13 +25,17 @@ export class Player {
 
   raycaster = new THREE.Raycaster(undefined, undefined, 0, 3);
   selectedCoords = null;
-  activeBlockId = blocks.grass.id;
+  activeBlockId = blocks.empty.id;
+
+  tool = new Tool();
 
   constructor(scene) {
     this.camera.position.set(32, 16, 32);
     this.camera.layers.enable(1);
     scene.add(this.camera);
     scene.add(this.cameraHelper);
+
+    this.camera.add(this.tool);
 
     document.addEventListener("keydown", this.onKeyDown.bind(this));
     document.addEventListener("keyup", this.onKeyUp.bind(this));
@@ -56,6 +61,7 @@ export class Player {
 
   update(world) {
     this.updateRaycaster(world);
+    this.tool.update();
   }
 
   updateRaycaster(world) {
@@ -145,8 +151,15 @@ export class Player {
       case "Digit7":
       case "Digit8":
       case "Digit9":
+        document
+          .getElementById(`toolbar-${this.activeBlockId}`)
+          .classList.remove("selected");
         this.activeBlockId = Number(event.key);
-        console.log("Active block id:", event.key);
+        document
+          .getElementById(`toolbar-${this.activeBlockId}`)
+          .classList.add("selected");
+
+        this.tool.visible = this.activeBlockId === 0;
         break;
       case "KeyW":
         this.input.z = this.maxSpeed;

@@ -11,3 +11,30 @@ body {
   color: white;
   margin: 8px;
 }
+
+#toolbar-container {
+  position: fixed;
+  bottom: 0.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#toolbar {
+  display: flex;
+  justify-content: space-between;
+  background-color: rgb(109, 109, 109);
+  border: 0.25rem solid rgb(147, 147, 147);
+  padding: 0.5rem;
+  column-gap: 0.75rem;
+}
+
+.toolbar-icon {
+  width: 4rem;
+  height: 4rem;
+  outline: 0.25rem solid rgb(58, 58, 58);
+}
+
+.toolbar-icon.selected {
+  outline: 0.25rem solid white;
+}
